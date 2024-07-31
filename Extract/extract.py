@@ -1,6 +1,15 @@
 import requests
 from bs4 import BeautifulSoup
 
+def extrair_estatiticas_por_minuto(soup, legenda):
+    numbers = {}
+    secao = soup.find_all('div', class_='stats-records--compare stats-records-inner')
+
+    for iteracao in secao:
+        div = iteracao.find('div')
+        if div and legenda in div.text:
+            
+
 def extrair_estatisticas_por_titulo(soup, titulo):
     estatisticas = {}
     sections = soup.find_all('div', class_='c-overlap__inner')
@@ -28,6 +37,9 @@ if response.status_code == 200:
     
     # Coletar dados de precisão de quedas
     precisao_quedas = extrair_estatisticas_por_titulo(soup, 'Precisão De Quedas')
+
+    estatiticas_por_minuto = soup.find('div', 'stats-records--compare stats-records-inner').text.strip()
+    print(estatiticas_por_minuto)
     
     data = []
     resultado = soup.find_all('div', class_="hero-profile")
