@@ -1,46 +1,34 @@
 import requests
 from bs4 import BeautifulSoup
 
-def coletar_dados_div(soup, div_class, stats_texts):
-    """
-    Coleta dados de uma div específica com base na classe e textos das estatísticas.
+def extrair_estatisticas_por_titulo(soup, titulo):
+    estatisticas = {}
+    sections = soup.find_all('div', class_='c-overlap__inner')
     
-    :param soup: Objeto BeautifulSoup da página web.
-    :param div_class: Classe da div que contém as estatísticas.
-    :param stats_texts: Dicionário onde as chaves são os textos que identificam as estatísticas e os valores são os nomes das variáveis para armazená-los.
-    :return: Dicionário com os dados coletados.
-    """
-    div = soup.find('div', class_=div_class)
-    dados = {key: None for key in stats_texts.values()}
-    
-    if div:
-        stats = div.find_all('div', class_='athlete-stats__stat')
-        for stat in stats:
-            stat_value = stat.find('p', class_='athlete-stats__text athlete-stats__stat-numb').text.strip()
-            stat_text = stat.find('p', class_='athlete-stats__text athlete-stats__stat-text').text.strip()
-            for key, value in stats_texts.items():
-                if key in stat_text:
-                    dados[value] = stat_value
-                    break
-    
-    return dados
+    for section in sections:
+        h2 = section.find('h2')
+        if h2 and titulo in h2.text:
+            stats_wrap = section.find('div', class_='c-overlap__stats-wrap')
+            stats = stats_wrap.find_all('dl', class_='c-overlap__stats')
+            for stat in stats:
+                stat_text = stat.find('dt', class_='c-overlap__stats-text').text.strip()
+                stat_value = stat.find('dd', class_='c-overlap__stats-value').text.strip()
+                estatisticas[stat_text] = stat_value
+            break
+    return estatisticas
 
 url = "https://www.ufc.com.br/athlete/alex-pereira"
-
 response = requests.get(url)
 
 if response.status_code == 200:
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    # Dicionário com os textos das estatísticas e os nomes das variáveis
-    stats_texts = {
-        'Wins by Knockout': 'vitorias_por_nocaute',
-        'First Round Finishes': 'vitorias_primeiro_round'
-    }
+    # Coletar dados dos golpes significativos
+    golpes_significativos = extrair_estatisticas_por_titulo(soup, 'Precisão de striking')
     
-    # Coletar dados das estatísticas
-    estatisticas = coletar_dados_div(soup, 'stats-records-inner', stats_texts)
-
+    # Coletar dados de precisão de quedas
+    precisao_quedas = extrair_estatisticas_por_titulo(soup, 'Precisão De Quedas')
+    
     data = []
     resultado = soup.find_all('div', class_="hero-profile")
     for result in resultado:
@@ -51,15 +39,19 @@ if response.status_code == 200:
         imagem = result.find('div', class_='hero-profile__image-wrap').find('img')
         imagem_src = imagem['src'] if imagem else None
 
-        data.append({
+        atleta_data = {
             'Categoria': categoria,
             'Atleta': atleta,
             'Recorde': record,
             'Ultima_Luta': ultima_luta,
-            'Foto': imagem_src,
-            'Vitorias por Nocaute': estatisticas['vitorias_por_nocaute'],
-            'Vitorias no Primeiro Round': estatisticas['vitorias_primeiro_round']
-        })
+            'Foto': imagem_src
+        }
+
+        # Adicionar estatísticas ao dicionário do atleta
+        atleta_data.update(golpes_significativos)
+        atleta_data.update(precisao_quedas)
+
+        data.append(atleta_data)
 
     if data:
         print(data)
