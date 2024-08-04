@@ -115,9 +115,27 @@ if response.status_code == 200:
     # Coletar dados de golpes por área
     golpes_por_area = extrair_golpes_por_area(soup)
 
-    atletas = soup.find_all('span', class_= 'ath-n__name ath-lf-fl')
-    print(atletas)
+    atletas = 'https://www.ufc.com.br/athletes'
+    lista = requests.get(atletas)
+    soup_atletas = BeautifulSoup(lista.text, 'html.parser')
+    secoes = soup_atletas.find_all('section', class_='l-listing--stacked--full-width')
 
+# Inicialize uma lista para armazenar os links
+links_lutadores = []
+
+for secao in secoes:
+    # Encontre todos os elementos <span> com as classes corretas
+    lutadores = secao.find_all('span', class_='ath-n__name ath-lf-fl')
+    for lutador in lutadores:
+        # Dentro de cada <span>, encontre o elemento <a> e obtenha o atributo href
+        link_element = lutador.find('a')
+        if link_element:
+            link = link_element.get('href')
+            if link:
+                full_link = f"https://www.ufc.com.br{link}"
+                links_lutadores.append(full_link)
+
+                print(links_lutadores)
     data = []
     resultado = soup.find_all('div', class_="hero-profile")
     for result in resultado:
@@ -150,3 +168,4 @@ if response.status_code == 200:
         print("Não foi possível extrair os dados")
 else:
     print("Erro ao acessar a página:", response.status_code)
+
