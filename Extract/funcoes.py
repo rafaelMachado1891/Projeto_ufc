@@ -122,21 +122,3 @@ def extrair_golpes_por_area(soup):
             areas['Pernas'] = leg.find('text', id='e-stat-body_x5F__x5F_leg_value').text.strip()
 
     return areas
-
-def coletar_informacoes_principais(soup):
-    nome = soup.find('span', class_='c-hero__headline-prefix').text.strip() if soup.find('span', class_='c-hero__headline-prefix') else None
-    apelido = soup.find('span', class_='c-hero__headline-suffix').text.strip() if soup.find('span', class_='c-hero__headline-suffix') else None
-    categoria = soup.find('div', class_='field field--name-stats-group-weight-class field--type-string field--label-hidden field__item').text.strip() if soup.find('div', class_='field field--name-stats-group-weight-class field--type-string field--label-hidden field__item') else None
-    estatisticas = extrair_dados_especificos(soup)
-    golpes_por_area = extrair_golpes_por_area(soup)
-    
-    informacoes_principais = {
-        'Nome': nome,
-        'Apelido': apelido,
-        'Categoria': categoria,
-        'Estatísticas': estatisticas,
-        'Golpes por Área': golpes_por_area
-    }
-    
-    return informacoes_principais
-
